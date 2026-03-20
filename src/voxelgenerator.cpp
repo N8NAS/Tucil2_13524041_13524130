@@ -25,12 +25,8 @@ void parseOBJ(const string& path, vector<Vertex>& vertices, vector<Face>& faces)
             vertices.push_back(v);
         } else if (type == "f") {
             Face f;
-            string s1, s2, s3;
-            ss >> s1 >> s2 >> s3;
             
-            f.v1 = stoi(s1.substr(0, s1.find("/")));
-            f.v2 = stoi(s2.substr(0, s2.find("/")));
-            f.v3 = stoi(s3.substr(0, s3.find("/")));
+            ss >> f.v1 >> f.v2 >> f.v3;
             faces.push_back(f);
         }
     }
@@ -59,7 +55,7 @@ Octree voxelarrToOctTree( vector<Face>& faces,vector<Vertex>& vertices){
     double minX,minY,minZ,maxX,maxY,maxZ;
     Octree Otree(minX,minY,minZ,maxX,maxY,maxZ);
     for (const auto& v : vertices) {
-        Otree.insert(v.x, v.y, v.z);
+        Otree.insert(v.x, v.y, v.z);    
     }
     return Otree;
 }
