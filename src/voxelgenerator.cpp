@@ -32,7 +32,7 @@ void parseOBJ(const string& path, vector<Vertex>& vertices, vector<Face>& faces)
     }
     file.close();
 }
-void getVoxelMinMax(vector<Vertex>& vertices,double minX,double minY,double minZ, double maxX,double maxY,double maxZ){
+void getVoxelMinMax(vector<Vertex>& vertices, double& minX, double& minY, double& minZ, double& maxX, double& maxY, double& maxZ){
     if (!vertices.empty()){
         minX = vertices[0].x;
         maxX = vertices[0].x;
@@ -51,11 +51,12 @@ void getVoxelMinMax(vector<Vertex>& vertices,double minX,double minY,double minZ
     }
 }
 
-Octree voxelarrToOctTree( vector<Face>& faces,vector<Vertex>& vertices){
-    double minX,minY,minZ,maxX,maxY,maxZ;
-    Octree Otree(minX,minY,minZ,maxX,maxY,maxZ);
-    for (const auto& v : vertices) {
-        Otree.insert(v.x, v.y, v.z);    
-    }
-    return Otree;
-}
+// Octree voxelarrToOctTree( vector<Face>& faces,vector<Vertex>& vertices){
+//     double minX,minY,minZ,maxX,maxY,maxZ;
+//     getVoxelMinMax(vertices, minX, minY, minZ, maxX, maxY, maxZ);
+//     Octree Otree(minX,minY,minZ,maxX,maxY,maxZ);
+//     for (const auto& v : vertices) {
+//         Otree.insert(v.x, v.y, v.z);    
+//     }
+//     return Otree;
+// }
