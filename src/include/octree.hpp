@@ -1,6 +1,6 @@
 #pragma once
 #include <bits/stdc++.h>
-#include "geometry.hpp" // <-- Harus dipanggil untuk menggunakan fungsi checkIntersect()
+#include "geometry.hpp"
 using namespace std;
 
 #define TopLeftFront 0
@@ -47,16 +47,13 @@ public:
         for (auto child : children) if(child != nullptr) delete child;
     }
 
-    // Fungsi insert & find DIHAPUS, diganti dengan BUILD (Algoritma intinya)
     void build(const vector<Triangle>& tris, int maxDepth) {
         
-        // 1. Buat AABB sementara dari Point Anda untuk dites tabrakan dengan fungsi SAT
         AABB box = {
             {(float)topLeftFront->x, (float)topLeftFront->y, (float)topLeftFront->z},
             {(float)bottomRightBack->x, (float)bottomRightBack->y, (float)bottomRightBack->z}
         };
 
-        // 2. Filter hanya segitiga yang bersentuhan dengan area ini
         vector<Triangle> intersectingTris;
         for (const auto& tri : tris) {
             if (checkIntersect(box, tri)) {
@@ -64,22 +61,17 @@ public:
             }
         }
 
-        // 3. Jika area ini kosong (tidak kena segitiga model), hentikan! (Pruning)
         if (intersectingTris.empty()) return;
 
-        // 4. Jika menyentuh segitiga dan sudah maxDepth, jadikan Voxel!
         if (depth == maxDepth) {
             isLeaf = true;
             return;
         }
 
-        // 5. DIVIDE: Perhitungan midx, midy, midz ANDA TETAP DIPERTAHANKAN!
         double midx = (topLeftFront->x + bottomRightBack->x) / 2.0;
         double midy = (topLeftFront->y + bottomRightBack->y) / 2.0;
         double midz = (topLeftFront->z + bottomRightBack->z) / 2.0;
 
-        // Pembuatan ke-8 anak TETAP MENGGUNAKAN LOGIKA ANDA
-        // (Saya hanya membuang '+1' agar tidak ada ruang bolong antar kubus)
         children[TopLeftFront] = new Octree(
             topLeftFront->x, topLeftFront->y, topLeftFront->z, 
             midx, midy, midz, depth + 1);
@@ -112,14 +104,28 @@ public:
             topLeftFront->x, midy, midz, 
             midx, bottomRightBack->y, bottomRightBack->z, depth + 1);
 
-        // Lakukan hal yang sama ke-8 anak tersebut (Rekursi)
         for (int i = 0; i < 8; i++) {
             children[i]->build(intersectingTris, maxDepth);
-            
-            // Hapus anak jika ternyata kosong, untuk hemat memori
             if (!children[i]->isLeaf && children[i]->children[0] == nullptr) {
                 delete children[i];
                 children[i] = nullptr;
+            }
+        }
+    }
+
+    void collectVoxels(vector<AABB>& voxels) {
+        if (isLeaf) {
+            AABB box = {
+                {(float)topLeftFront->x, (float)topLeftFront->y, (float)topLeftFront->z},
+                {(float)bottomRightBack->x, (float)bottomRightBack->y, (float)bottomRightBack->z}
+            };
+            voxels.push_back(box);
+        } 
+        else {
+            for (int i = 0; i < 8; i++) {
+                if (children[i] != nullptr) {
+                    children[i]->collectVoxels(voxels);
+                }
             }
         }
     }

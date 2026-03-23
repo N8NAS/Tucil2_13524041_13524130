@@ -1,5 +1,10 @@
-#include "octree.hpp"
-
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <chrono>
+#include <string>
+#include "include/octree.hpp"
+using namespace std::chrono;
 
 struct Vertex {
     float x, y, z;
@@ -11,7 +16,10 @@ struct Face {
 
 void parseOBJ(const string& path, vector<Vertex>& vertices, vector<Face>& faces) {
     ifstream file(path);
-    if (!file.is_open()) return;
+    if (!file.is_open()) {
+        cout << "Gagal membuka file: " << path << endl;
+        return;
+    }
 
     string line;
     while (getline(file, line)) {
@@ -25,8 +33,11 @@ void parseOBJ(const string& path, vector<Vertex>& vertices, vector<Face>& faces)
             vertices.push_back(v);
         } else if (type == "f") {
             Face f;
-            
-            ss >> f.v1 >> f.v2 >> f.v3;
+            string s1, s2, s3;
+            ss >> s1 >> s2 >> s3;
+            f.v1 = stoi(s1);
+            f.v2 = stoi(s2);
+            f.v3 = stoi(s3);
             faces.push_back(f);
         }
     }
@@ -51,12 +62,97 @@ void getVoxelMinMax(vector<Vertex>& vertices, double& minX, double& minY, double
     }
 }
 
-// Octree voxelarrToOctTree( vector<Face>& faces,vector<Vertex>& vertices){
-//     double minX,minY,minZ,maxX,maxY,maxZ;
-//     getVoxelMinMax(vertices, minX, minY, minZ, maxX, maxY, maxZ);
-//     Octree Otree(minX,minY,minZ,maxX,maxY,maxZ);
-//     for (const auto& v : vertices) {
-//         Otree.insert(v.x, v.y, v.z);    
-//     }
-//     return Otree;
-// }
+vector<AABB> runVoxelization(vector<Face>& faces, vector<Vertex>& vertices, int maxDepth) {
+    double minX, minY, minZ, maxX, maxY, maxZ;
+    getVoxelMinMax(vertices, minX, minY, minZ, maxX, maxY, maxZ);
+
+    double sizeX = maxX - minX;
+    double sizeY = maxY - minY;
+    double sizeZ = maxZ - minZ;
+    double maxSize = max({sizeX, sizeY, sizeZ});
+    maxX = minX + maxSize;
+    maxY = minY + maxSize;
+    maxZ = minZ + maxSize;
+
+    vector<Triangle> triangles;
+    for (const auto& f : faces) {
+        Vector3 v0 = {vertices[f.v1 - 1].x, vertices[f.v1 - 1].y, vertices[f.v1 - 1].z};
+        Vector3 v1 = {vertices[f.v2 - 1].x, vertices[f.v2 - 1].y, vertices[f.v2 - 1].z};
+        Vector3 v2 = {vertices[f.v3 - 1].x, vertices[f.v3 - 1].y, vertices[f.v3 - 1].z};
+        triangles.push_back({v0, v1, v2});
+    }
+
+    Octree tree(minX, minY, minZ, maxX, maxY, maxZ, 1);
+    tree.build(triangles, maxDepth);
+
+    vector<AABB> voxels;
+    tree.collectVoxels(voxels);
+
+    return voxels;
+}
+
+void writeVoxelOBJ(const string& path, const vector<AABB>& voxels) {
+    ofstream file(path);
+    int vertexOffset = 1;
+
+    for (const auto& box : voxels) {
+        file << "v " << box.min.x << " " << box.min.y << " " << box.min.z << "\n";
+        file << "v " << box.max.x << " " << box.min.y << " " << box.min.z << "\n";
+        file << "v " << box.max.x << " " << box.max.y << " " << box.min.z << "\n";
+        file << "v " << box.min.x << " " << box.max.y << " " << box.min.z << "\n";
+        file << "v " << box.min.x << " " << box.min.y << " " << box.max.z << "\n";
+        file << "v " << box.max.x << " " << box.min.y << " " << box.max.z << "\n";
+        file << "v " << box.max.x << " " << box.max.y << " " << box.max.z << "\n";
+        file << "v " << box.min.x << " " << box.max.y << " " << box.max.z << "\n";
+
+        int f[12][3] = {
+            {1,2,3}, {1,3,4}, {5,8,7}, {5,7,6}, 
+            {1,5,6}, {1,6,2}, {4,3,7}, {4,7,8}, 
+            {1,4,8}, {1,8,5}, {2,6,7}, {2,7,3}
+        };
+
+        for (int i = 0; i < 12; i++) {
+            file << "f " << f[i][0] + vertexOffset - 1 << " " 
+                         << f[i][1] + vertexOffset - 1 << " " 
+                         << f[i][2] + vertexOffset - 1 << "\n";
+        }
+        vertexOffset += 8;
+    }
+    file.close();
+}
+
+int main(int argc, char* argv[]) {
+    string inputFile = "../test/teapot.obj"; 
+    string outputFile = "output_voxel.obj";
+    int depth = 5; 
+
+    vector<Vertex> vertices;
+    vector<Face> faces;
+
+    cout << "Membaca file " << inputFile << "..." << endl;
+    parseOBJ(inputFile, vertices, faces);
+    
+    if (vertices.empty() || faces.empty()) {
+        cout << "File kosong atau tidak ditemukan!" << endl;
+        return 1;
+    }
+
+    cout << "Memulai Voxelization dengan kedalaman " << depth << "..." << endl;
+    
+    auto start = high_resolution_clock::now();
+
+    vector<AABB> voxels = runVoxelization(faces, vertices, depth);
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+
+    cout << "Menulis output ke " << outputFile << "..." << endl;
+    writeVoxelOBJ(outputFile, voxels);
+
+    cout << "\n--- STATISTIK VOXELIZATION ---" << endl;
+    cout << "Banyak Voxel (leaf node)  : " << voxels.size() << " kubus" << endl;
+    cout << "Lama Waktu Eksekusi       : " << duration.count() << " milidetik" << endl;
+    cout << "Selesai!" << endl;
+
+    return 0;
+}
