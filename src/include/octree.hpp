@@ -50,8 +50,8 @@ public:
     void build(const vector<Triangle>& tris, int maxDepth) {
         
         AABB box = {
-            {(float)topLeftFront->x, (float)topLeftFront->y, (float)topLeftFront->z},
-            {(float)bottomRightBack->x, (float)bottomRightBack->y, (float)bottomRightBack->z}
+            {topLeftFront->x, topLeftFront->y, topLeftFront->z},
+            {bottomRightBack->x, bottomRightBack->y, bottomRightBack->z}
         };
 
         vector<Triangle> intersectingTris;
@@ -106,9 +106,18 @@ public:
 
         for (int i = 0; i < 8; i++) {
             children[i]->build(intersectingTris, maxDepth);
-            if (!children[i]->isLeaf && children[i]->children[0] == nullptr) {
-                delete children[i];
-                children[i] = nullptr;
+            if (!children[i]->isLeaf) {
+                bool hasAnyChild = false;
+                for (int j = 0; j < 8; j++) {
+                    if (children[i]->children[j] != nullptr) {
+                        hasAnyChild = true;
+                        break;
+                    }
+                }
+                if (!hasAnyChild) {
+                    delete children[i]; 
+                    children[i] = nullptr;  
+                }
             }
         }
     }
@@ -116,8 +125,8 @@ public:
     void collectVoxels(vector<AABB>& voxels) {
         if (isLeaf) {
             AABB box = {
-                {(float)topLeftFront->x, (float)topLeftFront->y, (float)topLeftFront->z},
-                {(float)bottomRightBack->x, (float)bottomRightBack->y, (float)bottomRightBack->z}
+                {topLeftFront->x, topLeftFront->y, topLeftFront->z},
+                {bottomRightBack->x, bottomRightBack->y, bottomRightBack->z}
             };
             voxels.push_back(box);
         } 

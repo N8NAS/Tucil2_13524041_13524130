@@ -7,7 +7,7 @@
 using namespace std::chrono;
 
 struct Vertex {
-    float x, y, z;
+    double x, y, z;
 };
 
 struct Face {
@@ -62,7 +62,7 @@ void getVoxelMinMax(vector<Vertex>& vertices, double& minX, double& minY, double
     }
 }
 
-vector<AABB> runVoxelization(vector<Face>& faces, vector<Vertex>& vertices, int maxDepth) {
+vector<AABB> runVoxelization(vector<Face>& faces, vector<Vertex>& vertices, double targetVoxelSize) {
     double minX, minY, minZ, maxX, maxY, maxZ;
     getVoxelMinMax(vertices, minX, minY, minZ, maxX, maxY, maxZ);
 
@@ -70,9 +70,9 @@ vector<AABB> runVoxelization(vector<Face>& faces, vector<Vertex>& vertices, int 
     double sizeY = maxY - minY;
     double sizeZ = maxZ - minZ;
     double maxSize = max({sizeX, sizeY, sizeZ});
-    maxX = minX + maxSize;
-    maxY = minY + maxSize;
-    maxZ = minZ + maxSize;
+
+    int maxDepth = ceil(log2(maxSize / targetVoxelSize)) + 1;
+    cout << "Kalkulasi Otomatis - Max Depth: " << maxDepth << endl;
 
     vector<Triangle> triangles;
     for (const auto& f : faces) {
@@ -124,7 +124,6 @@ void writeVoxelOBJ(const string& path, const vector<AABB>& voxels) {
 int main(int argc, char* argv[]) {
     string inputFile = "../test/teapot.obj"; 
     string outputFile = "output_voxel.obj";
-    int depth = 5; 
 
     vector<Vertex> vertices;
     vector<Face> faces;
@@ -136,12 +135,10 @@ int main(int argc, char* argv[]) {
         cout << "File kosong atau tidak ditemukan!" << endl;
         return 1;
     }
-
-    cout << "Memulai Voxelization dengan kedalaman " << depth << "..." << endl;
     
     auto start = high_resolution_clock::now();
-
-    vector<AABB> voxels = runVoxelization(faces, vertices, depth);
+    double ukuranVoxel = 0.8;
+    vector<AABB> voxels = runVoxelization(faces, vertices, ukuranVoxel);
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
