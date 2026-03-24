@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
     }
 
     string inputPath = argv[1];
-    string outputPath = (argc > 2)?argv[2] : "output.obj";
+    string outputPath = (argc > 2)?argv[2] : "../test/output.obj";
     string command = "blender --python src/import_obj.py";
     vector<Vertex> vertices;
     vector<Face> faces;

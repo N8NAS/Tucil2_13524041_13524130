@@ -5,7 +5,7 @@ bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete()
 
 cwd = os.getcwd()
-file_path = os.path.join(cwd, "bin", "output.obj")
+file_path = os.path.join(cwd, "test", "output.obj")
 
 if os.path.exists(file_path):
     try:
