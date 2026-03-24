@@ -22,6 +22,7 @@ struct Point {
 
 class Octree {
 private:
+    inline static mutex stats_mutex;
     inline static map<int, int> node_at_depth;
     inline static map<int, int> skipped_at_depth;
     
@@ -48,7 +49,6 @@ public:
     }
 
     void build(const vector<Triangle>& tris, int maxDepth) {
-        
         AABB box = {
             {topLeftFront->x, topLeftFront->y, topLeftFront->z},
             {bottomRightBack->x, bottomRightBack->y, bottomRightBack->z}
@@ -63,6 +63,7 @@ public:
 
         if (intersectingTris.empty()) {
             if (depth < maxDepth) {
+                lock_guard<mutex> lock(stats_mutex); 
                 skipped_at_depth[depth + 1] += 8;
             }
             return;
@@ -77,41 +78,30 @@ public:
         double midy = (topLeftFront->y + bottomRightBack->y) / 2.0;
         double midz = (topLeftFront->z + bottomRightBack->z) / 2.0;
 
-        children[TopLeftFront] = new Octree(
-            topLeftFront->x, topLeftFront->y, topLeftFront->z, 
-            midx, midy, midz, depth + 1);
+        children[TopLeftFront] = new Octree(topLeftFront->x, topLeftFront->y, topLeftFront->z, midx, midy, midz, depth + 1);
+        children[TopRightFront] = new Octree(midx, topLeftFront->y, topLeftFront->z, bottomRightBack->x, midy, midz, depth + 1);
+        children[BottomRightFront] = new Octree(midx, midy, topLeftFront->z, bottomRightBack->x, bottomRightBack->y, midz, depth + 1);
+        children[BottomLeftFront] = new Octree(topLeftFront->x, midy, topLeftFront->z, midx, bottomRightBack->y, midz, depth + 1);
+        children[TopLeftBottom] = new Octree(topLeftFront->x, topLeftFront->y, midz, midx, midy, bottomRightBack->z, depth + 1);
+        children[TopRightBottom] = new Octree(midx, topLeftFront->y, midz, bottomRightBack->x, midy, bottomRightBack->z, depth + 1);
+        children[BottomRightBack] = new Octree(midx, midy, midz, bottomRightBack->x, bottomRightBack->y, bottomRightBack->z, depth + 1);
+        children[BottomLeftBack] = new Octree(topLeftFront->x, midy, midz, midx, bottomRightBack->y, bottomRightBack->z, depth + 1);
+        if (depth < 4) {
+            vector<future<void>> futures;
+            for (int i = 0; i < 8; i++) {
+                futures.push_back(async(launch::async, &Octree::build, children[i], ref(intersectingTris), maxDepth));
+            }
+            for (auto& f : futures) f.get(); 
+        } 
+        else {
+            for (int i = 0; i < 8; i++) {
+                children[i]->build(intersectingTris, maxDepth);
+            }
+        }
 
-        children[TopRightFront] = new Octree(
-            midx, topLeftFront->y, topLeftFront->z, 
-            bottomRightBack->x, midy, midz, depth + 1);
-
-        children[BottomRightFront] = new Octree(
-            midx, midy, topLeftFront->z, 
-            bottomRightBack->x, bottomRightBack->y, midz, depth + 1);
-
-        children[BottomLeftFront] = new Octree(
-            topLeftFront->x, midy, topLeftFront->z, 
-            midx, bottomRightBack->y, midz, depth + 1);
-
-        children[TopLeftBottom] = new Octree(
-            topLeftFront->x, topLeftFront->y, midz, 
-            midx, midy, bottomRightBack->z, depth + 1);
-
-        children[TopRightBottom] = new Octree(
-            midx, topLeftFront->y, midz, 
-            bottomRightBack->x, midy, bottomRightBack->z, depth + 1);
-
-        children[BottomRightBack] = new Octree(
-            midx, midy, midz, 
-            bottomRightBack->x, bottomRightBack->y, bottomRightBack->z, depth + 1);
-
-        children[BottomLeftBack] = new Octree(
-            topLeftFront->x, midy, midz, 
-            midx, bottomRightBack->y, bottomRightBack->z, depth + 1);
-
+ 
         for (int i = 0; i < 8; i++) {
-            children[i]->build(intersectingTris, maxDepth);
-            if (!children[i]->isLeaf) {
+            if (children[i] != nullptr && !children[i]->isLeaf) {
                 bool hasAnyChild = false;
                 for (int j = 0; j < 8; j++) {
                     if (children[i]->children[j] != nullptr) {
@@ -120,6 +110,7 @@ public:
                     }
                 }
                 if (!hasAnyChild) {
+                    lock_guard<mutex> lock(stats_mutex);
                     node_at_depth[children[i]->depth]--;
                     delete children[i]; 
                     children[i] = nullptr;  
@@ -127,7 +118,6 @@ public:
             }
         }
     }
-
     void collectVoxels(vector<AABB>& voxels) {
         if (isLeaf) {
             AABB box = {

@@ -98,7 +98,9 @@ int main(int argc, char* argv[]) {
     }
 
     string inputPath = argv[1];
-    string outputPath = (argc > 2)?argv[2] : "../test/output.obj";
+    string outputPath = (argc > 2)?argv[2] : "../test/output.obj";\
+
+    string depthArg = (argc > 3 && atoi(argv[3])<20)?argv[3] : "5";
     string command = "blender --python src/import_obj.py";
     vector<Vertex> vertices;
     vector<Face> faces;
@@ -110,9 +112,9 @@ int main(int argc, char* argv[]) {
 
     double minX, minY, minZ, maxX, maxY, maxZ;
     getVoxelMinMax(vertices, minX, minY, minZ, maxX, maxY, maxZ);
-    double maxSize = max({maxX - minX, maxY - minY, maxZ - minZ});
-    double targetVoxelSize = 0.5; 
-    int maxDepth = static_cast<int>(ceil(log2(maxSize / targetVoxelSize)));
+    double maxSize = max({maxX - minX, maxY - minY, maxZ - minZ}); 
+    
+    int maxDepth = (atoi(depthArg.c_str()));
     vector<Triangle> triangles;
     for (const auto& f : faces) {
         triangles.push_back({
