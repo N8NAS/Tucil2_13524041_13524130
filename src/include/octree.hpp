@@ -24,8 +24,9 @@ class Octree {
 private:
     inline static map<int, int> node_at_depth;
     inline static map<int, int> skipped_at_depth;
-    inline static int max_reached_depth = 0;
+    
 public:
+    inline static int max_reached_depth = 0;
     bool isLeaf;
     int depth;
     Point *topLeftFront, *bottomRightBack;

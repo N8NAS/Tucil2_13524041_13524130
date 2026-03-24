@@ -98,12 +98,12 @@ int main(int argc, char* argv[]) {
     }
 
     string inputPath = argv[1];
-    string outputPath = (argc > 2) ? argv[2] : "output.obj";
+    string outputPath = (argc > 2)?argv[2] : "output.obj";
     string command = "blender --python src/import_obj.py";
     vector<Vertex> vertices;
     vector<Face> faces;
 
-    cout << "Reading: " << inputPath << endl;
+    cout << "[Parsing file obj] : " << inputPath << endl;
     parseOBJ(inputPath, vertices, faces);
 
     if (vertices.empty()) return 1;
@@ -131,10 +131,10 @@ int main(int argc, char* argv[]) {
     vector<AABB> voxels;
     tree.collectVoxels(voxels);
 
-    cout << "Writing: " << outputPath << endl;
+    cout << "[Output di path  ] : " << outputPath << endl<< endl;
     writeVoxelOBJ(outputPath, voxels);
 
-    cout << "\n--- STATISTIK ---" << endl;
+    cout << "\n[ STATISTIK ] " << endl;
     cout << "Voxel terbentuk    : " << voxels.size() << endl;
     cout << "Vertex awal        : " << vertices.size() << endl;
     cout << "Faces awal         : " << faces.size() << endl;
@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
     int result = system(command.c_str());
     
     if (result != 0) {
-        cerr << "Gagal menjalankan Blender. Pastikan 'blender' terdaftar di PATH." << endl;
+        cerr << "Gagal menjalankan Blender." << endl;
     }
     return 0;
 }
