@@ -30,7 +30,7 @@ jika file voxel_gen aman maka bisa dengan menjalankan command berikut:
 ```bash
 ./bin/voxel_gen test/<nama_obj>.obj bin/output.obj
 ```
-
+> [!NOTE]
 >Jika file <code>voxel_gen.exe</code> atau <code>voxel_gen</code> tidak dapat dikompilasi/error atau belum dibuild atau ingin di rebuild maka cara memperbaiki nya dengan cara berikut:
 ```bash
 cd build 
@@ -41,5 +41,5 @@ cd ..
 
 ---
 ## Author:
-### 1. Nathan Adhika Sentosa [NIM: 13524048]
+### 1. Nathan Adhika Sentosa [NIM: 13524041]
 ### 2. Faris Wirakusuma Triawan [NIM: 13524130]
