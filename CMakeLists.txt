@@ -3,39 +3,36 @@ project(VoxelProject)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# 1. Output executable ke folder bin di root project
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-# 2. Include headers
+# Include headers
 include_directories(src/include)
 
-# 3. Build executable
+# executable
 add_executable(voxel_gen src/voxelgenerator.cpp)
 
-# 4. Variabel Input File (Bisa diganti lewat terminal)
-# Default: teapot.obj
-set(INPUT_FILE "teapot.obj" CACHE STRING "Nama file OBJ di folder test")
+# # Object_test/default
+# set(INPUT_FILE "teapot.obj" CACHE STRING "Nama file OBJ input di folder test")
+# set(OUTPUT_FILE "output.obj" CACHE STRING "Nama file OBJ output di folder bin")
 
-# 5. Generate output.obj di dalam folder bin
-add_custom_command(
-    OUTPUT ${CMAKE_SOURCE_DIR}/bin/output.obj
-    COMMAND voxel_gen ${CMAKE_SOURCE_DIR}/test/${INPUT_FILE}
-    DEPENDS voxel_gen
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
-    COMMENT "Generating output.obj from test/${INPUT_FILE}"
-    VERBATIM
-)
+# # costum command for voxelisation
+# add_custom_command(
+#     OUTPUT ${CMAKE_SOURCE_DIR}/bin/${OUTPUT_FILE}
+#     COMMAND voxel_gen ${CMAKE_SOURCE_DIR}/test/${INPUT_FILE} ${CMAKE_SOURCE_DIR}/bin/${OUTPUT_FILE}
+#     DEPENDS voxel_gen
+#     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
+#     COMMENT "Generating ${OUTPUT_FILE} from test/${INPUT_FILE}"
+#     VERBATIM
+# )
 
-# 6. Target untuk trigger generasi file secara otomatis
-add_custom_target(generate_obj ALL
-    DEPENDS ${CMAKE_SOURCE_DIR}/bin/output.obj
-)
+# # obj generator
+# add_custom_target(generate_obj
+#     DEPENDS ${CMAKE_SOURCE_DIR}/bin/${OUTPUT_FILE}
+# )
 
-# 7. Target untuk meluncurkan Blender
+# blender
 add_custom_target(view
     COMMAND blender --python ${CMAKE_SOURCE_DIR}/src/import_obj.py
-    DEPENDS generate_obj
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Launching Blender to view geometry"
+    COMMENT "Launching Blender to view the latest bin/output.obj"
 )

@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/voxel_gen.dir/src/voxelgenerator.cpp.o -o /home/faris-wirakusuma/Ngampus/STIMA/Tucil2_13524041_13524130/bin/voxel_gen 

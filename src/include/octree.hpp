@@ -12,7 +12,6 @@ using namespace std;
 #define BottomRightBack 6
 #define BottomLeftBack 7
 
-// Struct Point ANDA TETAP DIPERTAHANKAN
 struct Point {
     double x;
     double y;
@@ -22,23 +21,23 @@ struct Point {
 };
 
 class Octree {
-    // Point* point; // INI DIHAPUS karena kita tidak menyimpan 1 titik lagi
-    
+private:
+    inline static map<int, int> node_at_depth;
+    inline static map<int, int> skipped_at_depth;
+    inline static int max_reached_depth = 0;
 public:
-    bool isLeaf;     // DITAMBAHKAN: Untuk menandai apakah ini sudah jadi Voxel
-    int depth;       // DITAMBAHKAN: Untuk mencatat tingkat kedalaman
-
-    // Variabel batas Anda TETAP DIPERTAHANKAN
+    bool isLeaf;
+    int depth;
     Point *topLeftFront, *bottomRightBack;
     vector<Octree*> children;
-
-    // Konstruktor disesuaikan sedikit untuk menerima kedalaman
     Octree(double x1, double y1, double z1, double x2, double y2, double z2, int d = 1) {
         topLeftFront = new Point(x1, y1, z1);
         bottomRightBack = new Point(x2, y2, z2);
         depth = d;
         isLeaf = false;
         children.assign(8, nullptr);
+        node_at_depth[depth]++;
+        if (depth > max_reached_depth) max_reached_depth = depth;
     }
 
     ~Octree() {
@@ -61,7 +60,12 @@ public:
             }
         }
 
-        if (intersectingTris.empty()) return;
+        if (intersectingTris.empty()) {
+            if (depth < maxDepth) {
+                skipped_at_depth[depth + 1] += 8;
+            }
+            return;
+        }
 
         if (depth == maxDepth) {
             isLeaf = true;
@@ -115,6 +119,7 @@ public:
                     }
                 }
                 if (!hasAnyChild) {
+                    node_at_depth[children[i]->depth]--;
                     delete children[i]; 
                     children[i] = nullptr;  
                 }
@@ -136,6 +141,17 @@ public:
                     children[i]->collectVoxels(voxels);
                 }
             }
+        }
+    }
+    void printStatistics() {
+        cout << "\nStatistik node octree yang terbentuk:" << endl;
+        for (int d = 1; d <= max_reached_depth; ++d) {
+            cout << d << " : " << node_at_depth[d] << endl;
+        }
+
+        cout << "\nStatistik node yang tidak perlu ditelusuri:" << endl;
+        for (int d = 1; d <= max_reached_depth; ++d) {
+            cout << d << " : " << skipped_at_depth[d] << endl;
         }
     }
 };
