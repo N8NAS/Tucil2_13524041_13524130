@@ -1,4 +1,0 @@
-/home/faris-wirakusuma/Ngampus/STIMA/Tucil2_13524041_13524130/build/CMakeFiles/voxel_gen.dir
-/home/faris-wirakusuma/Ngampus/STIMA/Tucil2_13524041_13524130/build/CMakeFiles/view.dir
-/home/faris-wirakusuma/Ngampus/STIMA/Tucil2_13524041_13524130/build/CMakeFiles/edit_cache.dir
-/home/faris-wirakusuma/Ngampus/STIMA/Tucil2_13524041_13524130/build/CMakeFiles/rebuild_cache.dir
