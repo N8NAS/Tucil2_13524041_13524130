@@ -28,7 +28,7 @@ Program ini dibuat dengan bahasa C++ dengan bantuan tools CMake dan python(untuk
 
 jika file voxel_gen aman maka bisa dengan menjalankan command berikut:
 ```bash
-./bin/voxel_gen test/<nama_obj>.obj bin/output.obj
+./bin/voxel_gen test/<nama_input_obj>.obj test/<nama_output_obj>.obj
 ```
 > [!NOTE]
 >Jika file <code>voxel_gen.exe</code> atau <code>voxel_gen</code> tidak dapat dikompilasi/error atau belum dibuild atau ingin di rebuild maka cara memperbaiki nya dengan cara berikut:
@@ -36,7 +36,7 @@ jika file voxel_gen aman maka bisa dengan menjalankan command berikut:
 cd build 
 cmake .. && make
 cd ..
-./bin/voxel_gen test/<nama_obj>.obj bin/output.obj
+./bin/voxel_gen test/<nama_obj>.obj test/<nama_output_obj>..obj
 ```
 
 ---
