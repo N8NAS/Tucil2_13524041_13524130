@@ -67,6 +67,7 @@ cd ..
 cd build
 cmake -G "MinGW Makefiles" -DCMAKE_MAKE_PROGRAM=mingw32-make ..
 mingw32-make
+./bin/voxel_gen test/<nama_obj>.obj test/<nama_output_obj>..obj
 ```
 ---
 ## Author:
