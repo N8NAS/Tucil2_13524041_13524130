@@ -22,6 +22,29 @@ Program ini dibuat dengan bahasa C++ dengan bantuan tools CMake dan python(untuk
         ```bash
         choco install make
         ```
+### 4. Compiler C++ (MinGW-w64 / GCC)
+Versi Minimal: C++17 (untuk mendukung fitur modern pada octree.hpp).
+
+### Metode Instalasi:
+
+### Linux (Ubuntu): 
+```bash
+sudo apt update
+sudo apt install build-essential
+```
+### Windows (MinGW-w64): 
+Untuk pengguna Windows, sangat disarankan menggunakan MSYS2 untuk mengelola toolchain GCC.
+
+Instalasi MSYS2: Unduh installer di msys2.org.
+
+Instalasi Toolchain: Buka terminal UCRT64 atau MinGW64 (dalam MSYS2) dan jalankan:
+
+```bash
+pacman -Syu
+pacman -S mingw-w64-ucrt-x86_64-gcc
+pacman -S mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-make
+```
+Penting: Tambahkan path folder <code>bin</code>d ari MSYS2 (contoh: <code> C:\msys64\ucrt64\bin</code>) ke dalam System Environment Variables (PATH) di Windows agar perintah g++ atau mingw32-make bisa dipanggil dari CMD atau PowerShell biasa.
 
 ---
 ## Cara menjalankan dan menggunakan program
@@ -32,13 +55,19 @@ jika file voxel_gen aman maka bisa dengan menjalankan command berikut:
 ```
 > [!NOTE]
 >Jika file <code>voxel_gen.exe</code> atau <code>voxel_gen</code> tidak dapat dikompilasi/error atau belum dibuild atau ingin di rebuild maka cara memperbaiki nya dengan cara berikut:
+### Linux :
 ```bash
 cd build 
 cmake .. && make
 cd ..
 ./bin/voxel_gen test/<nama_obj>.obj test/<nama_output_obj>..obj
 ```
-
+### Windows :
+```bash
+cd build
+cmake -G "MinGW Makefiles" -DCMAKE_MAKE_PROGRAM=mingw32-make ..
+mingw32-make
+```
 ---
 ## Author:
 ### 1. Nathan Adhika Sentosa [NIM: 13524041]
