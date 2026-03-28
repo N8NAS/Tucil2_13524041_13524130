@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include "octree.hpp"
 #include "renderer.hpp"
-#include <GLFW/glfw3.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 using namespace std;
