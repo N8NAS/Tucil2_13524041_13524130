@@ -112,7 +112,6 @@ int main(int argc, char* argv[]) {
 
     double minX, minY, minZ, maxX, maxY, maxZ;
     getVoxelMinMax(vertices, minX, minY, minZ, maxX, maxY, maxZ);
-    double maxSize = max({maxX - minX, maxY - minY, maxZ - minZ}); 
     
     int maxDepth = (atoi(depthArg.c_str()));
     vector<Triangle> triangles;
