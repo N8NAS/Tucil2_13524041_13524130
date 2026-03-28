@@ -20,6 +20,6 @@ add_executable(voxel_gen src/voxelgenerator.cpp)
 #link library
 target_link_libraries(voxel_gen PRIVATE 
     Threads::Threads 
-    SDL2::SDL2
+    SDL2::SDL2main   
+    SDL2::SDL2 
 )
-
