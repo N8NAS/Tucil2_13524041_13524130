@@ -104,8 +104,6 @@ int main(int argc, char* argv[]) {
 
     vector<Vertex> vertices;
     vector<Face> faces;
-
-    // --- CLI LOGS START ---
     cout << "[Parsing file obj] : " << inputPath << endl;
     parseOBJ(inputPath, vertices, faces);
     if (vertices.empty()) return 1;
@@ -145,7 +143,7 @@ int main(int argc, char* argv[]) {
     }
 
     int width = 1024, height = 768;
-    SDL_Window* window = SDL_CreateWindow("Voxel Project - SDL2 Software Renderer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("Voxel Project", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
     SDL_Renderer* sdlRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
     SDL_Texture* texture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
 
