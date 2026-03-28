@@ -8,8 +8,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 #package
 find_package(Threads REQUIRED)
-find_package(X11 REQUIRED)
-
+find_package(SDL2 REQUIRED)
 #include
 include_directories(src/include)
 include_directories(src)
@@ -21,6 +20,6 @@ add_executable(voxel_gen src/voxelgenerator.cpp)
 #link library
 target_link_libraries(voxel_gen PRIVATE 
     Threads::Threads 
-    ${X11_LIBRARIES}
+    SDL2::SDL2
 )
 

@@ -11,19 +11,21 @@ Program ini dibuat dengan bahasa C++ dengan bantuan tools CMake dan python(untuk
     * **Linux:** `sudo apt install cmake`
     * **Windows:** Unduh di [cmake.org](https://cmake.org/download/)
 
-### 2. X11 
-Versi Minimal: Protokol X11 standar.
+### 2. SDL2 (Simple DirectMedia Layer)
+Fungsi: Library abstraksi untuk manajemen jendela, event input, dan pemetaan framebuffer ke layar secara lintas platform.
 
-* **Metode Instalasi:**
+Metode Instalasi:
+* **Linux(Ubuntu/Debian):**
+    ```Bash
+    sudo apt update
+    sudo apt install libsdl2-
+    ```
+* **Windows(MSYS2):**
+    Buka terminal UCRT64 dan jalankan:
 
-    * **Linux:**  
-        ```bash
-        sudo apt install libx11-dev
-        ```
-
-  * **Windows:**   
-    * Instal X Server eksternal seperti VcXsrv atau Xming untuk mendukung output grafis dari environment WSL.
-
+    ```Bash
+    pacman -S mingw-w64-ucrt-x86_64-SDL2
+    ```
 ### 3. Makefile (GNU Make)
 * **Metode Instalasi:**
     * **Linux:** Umumnya sudah tersedia secara default.

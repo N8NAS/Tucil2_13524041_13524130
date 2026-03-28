@@ -2,8 +2,7 @@
 #include <cstdlib>
 #include "octree.hpp"
 #include "renderer.hpp"
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
+#include <SDL2/SDL.h>
 using namespace std;
 using namespace std::chrono;
 
@@ -106,6 +105,7 @@ int main(int argc, char* argv[]) {
     vector<Vertex> vertices;
     vector<Face> faces;
 
+    // --- CLI LOGS START ---
     cout << "[Parsing file obj] : " << inputPath << endl;
     parseOBJ(inputPath, vertices, faces);
     if (vertices.empty()) return 1;
@@ -113,6 +113,7 @@ int main(int argc, char* argv[]) {
     double minX, minY, minZ, maxX, maxY, maxZ;
     getVoxelMinMax(vertices, minX, minY, minZ, maxX, maxY, maxZ);
     double maxSize = std::max({maxX - minX, maxY - minY, maxZ - minZ});
+    
     vector<Triangle> triangles;
     for (const auto& f : faces) {
         triangles.push_back({{vertices[f.v1-1].x, vertices[f.v1-1].y, vertices[f.v1-1].z},
@@ -138,27 +139,24 @@ int main(int argc, char* argv[]) {
     cout << "Lama waktu         : " << duration_cast<milliseconds>(stop - start).count() << " ms" << endl;
     cout << "Path file .obj     : " << outputPath << endl;
     tree.printStatistics();
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << endl;
+        return 1;
+    }
 
-    Display* display = XOpenDisplay(NULL);
-    if (!display) return 1;
-    
     int width = 1024, height = 768;
-    Window window = XCreateSimpleWindow(display, RootWindow(display, DefaultScreen(display)), 0, 0, width, height, 1, 0, 0);
-    XSelectInput(display, window, ExposureMask | KeyPressMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
-    XMapWindow(display, window);
+    SDL_Window* window = SDL_CreateWindow("Voxel Project - SDL2 Software Renderer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
+    SDL_Renderer* sdlRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+    SDL_Texture* texture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
 
     std::vector<uint32_t> frameBuffer(width * height);
     SoftwareRenderer renderer(width, height);
+    
     renderer.rotationY = 0.8f;   
     renderer.rotationX = 0.5f;  
-    
     renderer.cameraPos.x = (float)((minX + maxX) / 2);
     renderer.cameraPos.y = (float)((minY + maxY) / 2);
     renderer.cameraPos.z = -(maxSize * 5.0f);
-
-    XImage* ximage = XCreateImage(display, DefaultVisual(display, DefaultScreen(display)), DefaultDepth(display, DefaultScreen(display)), 
-                                  ZPixmap, 0, (char*)frameBuffer.data(), width, height, 32, 0);
-    GC gc = XCreateGC(display, window, 0, NULL);
 
     bool running = true;
     bool isRightDragging = false;
@@ -167,44 +165,44 @@ int main(int argc, char* argv[]) {
     cout << "\n[ Visualisasi ] : Klik Kanan + Drag untuk rotasi, Scroll untuk Zoom." << endl;
 
     while (running) {
-        renderer.render(voxels, frameBuffer);
-        XPutImage(display, window, gc, ximage, 0, 0, 0, 0, width, height);
-        
-        while (XPending(display)) {
-            XEvent event;
-            XNextEvent(display, &event);
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) running = false;
+            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) running = false;
 
-            if (event.type == KeyPress && XLookupKeysym(&event.xkey, 0) == XK_Escape) running = false;
-
-            if (event.type == ButtonPress) {
-                if (event.xbutton.button == 3) {
+            if (event.type == SDL_MOUSEBUTTONDOWN) {
+                if (event.button.button == SDL_BUTTON_RIGHT) {
                     isRightDragging = true;
-                    lastX = event.xbutton.x;
-                    lastY = event.xbutton.y;
+                    lastX = event.button.x; lastY = event.button.y;
                 }
-                if (event.xbutton.button == 4) renderer.cameraPos.z += maxSize * 0.2f; 
-                if (event.xbutton.button == 5) renderer.cameraPos.z -= maxSize * 0.2f; 
             }
-
-            if (event.type == ButtonRelease && event.xbutton.button == 3) {
-                isRightDragging = false;
+            if (event.type == SDL_MOUSEBUTTONUP) {
+                if (event.button.button == SDL_BUTTON_RIGHT) isRightDragging = false;
             }
-
-            if (event.type == MotionNotify && isRightDragging) {
-                int dx = event.xmotion.x - lastX;
-                int dy = event.xmotion.y - lastY;
-                
-                renderer.rotationY += dx * 0.005f;
-                renderer.rotationX += dy * 0.005f;
+            if (event.type == SDL_MOUSEWHEEL) {
+                if (event.wheel.y > 0) renderer.cameraPos.z += maxSize * 0.2f; 
+                else if (event.wheel.y < 0) renderer.cameraPos.z -= maxSize * 0.2f; 
+            }
+            if (event.type == SDL_MOUSEMOTION && isRightDragging) {
+                renderer.rotationY += (event.motion.x - lastX) * 0.005f;
+                renderer.rotationX += (event.motion.y - lastY) * 0.005f;
                 if (renderer.rotationX > 1.5f) renderer.rotationX = 1.5f;
                 if (renderer.rotationX < -1.5f) renderer.rotationX = -1.5f;
-
-                lastX = event.xmotion.x;
-                lastY = event.xmotion.y;
+                lastX = event.motion.x; lastY = event.motion.y;
             }
         }
+
+        renderer.render(voxels, frameBuffer);
+
+        SDL_UpdateTexture(texture, NULL, frameBuffer.data(), width * sizeof(uint32_t));
+        SDL_RenderClear(sdlRenderer);
+        SDL_RenderCopy(sdlRenderer, texture, NULL, NULL);
+        SDL_RenderPresent(sdlRenderer);
     }
 
-    XCloseDisplay(display);
+    SDL_DestroyTexture(texture);
+    SDL_DestroyRenderer(sdlRenderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
     return 0;
 }
