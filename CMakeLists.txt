@@ -12,7 +12,6 @@ find_package(SDL2 REQUIRED)
 #include
 include_directories(src/include)
 include_directories(src)
-include_directories(${X11_INCLUDE_DIR})
 
 #executable
 add_executable(voxel_gen src/voxelgenerator.cpp)
