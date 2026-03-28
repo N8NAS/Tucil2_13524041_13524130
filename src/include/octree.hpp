@@ -38,6 +38,7 @@ public:
         depth = d;
         isLeaf = false;
         children.assign(8, nullptr);
+        lock_guard<mutex> lock(stats_mutex);
         node_at_depth[depth]++;
         if (depth > max_reached_depth) max_reached_depth = depth;
     }
