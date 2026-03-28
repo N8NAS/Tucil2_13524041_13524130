@@ -140,7 +140,6 @@ int main(int argc, char* argv[]) {
     cout << "Path file .obj     : " << outputPath << endl;
     tree.printStatistics();
 
-    // --- 4. VISUALISASI X11 (ROBLOX NAVIGATION) ---
     Display* display = XOpenDisplay(NULL);
     if (!display) return 1;
     
