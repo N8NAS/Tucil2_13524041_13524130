@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
 
     double minX, minY, minZ, maxX, maxY, maxZ;
     getVoxelMinMax(vertices, minX, minY, minZ, maxX, maxY, maxZ);
-    
+    double maxSize = std::max({maxX - minX, maxY - minY, maxZ - minZ});
     vector<Triangle> triangles;
     for (const auto& f : faces) {
         triangles.push_back({{vertices[f.v1-1].x, vertices[f.v1-1].y, vertices[f.v1-1].z},

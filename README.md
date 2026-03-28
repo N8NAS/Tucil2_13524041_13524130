@@ -11,13 +11,22 @@ Program ini dibuat dengan bahasa C++ dengan bantuan tools CMake dan python(untuk
     * **Linux:** `sudo apt install cmake`
     * **Windows:** Unduh di [cmake.org](https://cmake.org/download/)
 
-### 2. Blender
-* **Konfigurasi:** Pastikan direktori *executable* `blender` sudah terdaftar dalam sistem **PATH**.
-* **Unduh:** [blender.org/download](https://www.blender.org/download/)
+### 2. X11 
+Versi Minimal: Protokol X11 standar.
+
+* **Metode Instalasi:**
+
+    * **Linux:**  
+        ```bash
+        sudo apt install libx11-dev
+        ```
+
+  * **Windows:**   
+    * Instal X Server eksternal seperti VcXsrv atau Xming untuk mendukung output grafis dari environment WSL.
 
 ### 3. Makefile (GNU Make)
 * **Metode Instalasi:**
-    * **Linux/macOS:** Umumnya sudah tersedia secara default.
+    * **Linux:** Umumnya sudah tersedia secara default.
     * **Windows:** Gunakan [MinGW-w64](http://mingw-w64.org/) atau via Chocolatey:
         ```bash
         choco install make
@@ -25,26 +34,28 @@ Program ini dibuat dengan bahasa C++ dengan bantuan tools CMake dan python(untuk
 ### 4. Compiler C++ (MinGW-w64 / GCC)
 Versi Minimal: C++17 (untuk mendukung fitur modern pada octree.hpp).
 
-### Metode Instalasi:
+* **Metode Instalasi:**
 
-### Linux (Ubuntu): 
-```bash
-sudo apt update
-sudo apt install build-essential
-```
-### Windows (MinGW-w64): 
-Untuk pengguna Windows, sangat disarankan menggunakan MSYS2 untuk mengelola toolchain GCC.
 
-Instalasi MSYS2: Unduh installer di msys2.org.
+    * **Linux (Ubuntu):**  
+        ```bash
+        sudo apt update
+        sudo apt install build-essential
+        ```
+  * **Windows(MinGW-w64):** 
+    Untuk pengguna Windows, sangat disarankan menggunakan MSYS2 untuk mengelola toolchain GCC.
 
-Instalasi Toolchain: Buka terminal UCRT64 atau MinGW64 (dalam MSYS2) dan jalankan:
+    Instalasi MSYS2: Unduh installer di msys2.org.
 
-```bash
-pacman -Syu
-pacman -S mingw-w64-ucrt-x86_64-gcc
-pacman -S mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-make
-```
-Penting: Tambahkan path folder <code>bin</code>d ari MSYS2 (contoh: <code> C:\msys64\ucrt64\bin</code>) ke dalam System Environment Variables (PATH) di Windows agar perintah g++ atau mingw32-make bisa dipanggil dari CMD atau PowerShell biasa.
+    Instalasi Toolchain: Buka terminal UCRT64 atau MinGW64 (dalam MSYS2) dan jalankan:
+
+    ```bash
+    pacman -Syu
+    pacman -S mingw-w64-ucrt-x86_64-gcc
+    pacman -S mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-make
+    ```
+> [!IMPORTANT]
+>  UNTUK WINDOWS: Tambahkan path folder <code>bin</code>dari MSYS2 (contoh: <code> C:\msys64\ucrt64\bin</code>) ke dalam System Environment Variables (PATH) di Windows agar perintah g++ atau mingw32-make bisa dipanggil dari CMD atau PowerShell biasa.
 
 ---
 ## Cara menjalankan dan menggunakan program
