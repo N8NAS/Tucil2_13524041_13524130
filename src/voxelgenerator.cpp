@@ -1,7 +1,10 @@
 #include <bits/stdc++.h>
 #include <cstdlib>
 #include "octree.hpp"
-
+#include "renderer.hpp"
+#include <GLFW/glfw3.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 using namespace std;
 using namespace std::chrono;
 
@@ -93,49 +96,42 @@ void writeVoxelOBJ(const string& path, const vector<AABB>& voxels) {
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        cerr << "Usage: " << argv[0] << " <input.obj> [output.obj]" << endl;
+        cerr << "Usage: " << argv[0] << " <input.obj> [output.obj] [depth]" << endl;
         return 1;
     }
 
     string inputPath = argv[1];
-    string outputPath = (argc > 2)?argv[2] : "../test/output.obj";\
+    string outputPath = (argc > 2) ? argv[2] : "../test/output.obj";
+    int maxDepth = (argc > 3) ? atoi(argv[3]) : 5;
 
-    string depthArg = (argc > 3 && atoi(argv[3])<20)?argv[3] : "5";
-    string command = "blender --python src/import_obj.py";
     vector<Vertex> vertices;
     vector<Face> faces;
 
     cout << "[Parsing file obj] : " << inputPath << endl;
     parseOBJ(inputPath, vertices, faces);
-
     if (vertices.empty()) return 1;
 
     double minX, minY, minZ, maxX, maxY, maxZ;
     getVoxelMinMax(vertices, minX, minY, minZ, maxX, maxY, maxZ);
     double maxSize = max({maxX - minX, maxY - minY, maxZ - minZ}); 
     
-    int maxDepth = (atoi(depthArg.c_str()));
     vector<Triangle> triangles;
     for (const auto& f : faces) {
-        triangles.push_back({
-            {vertices[f.v1-1].x, vertices[f.v1-1].y, vertices[f.v1-1].z},
-            {vertices[f.v2-1].x, vertices[f.v2-1].y, vertices[f.v2-1].z},
-            {vertices[f.v3-1].x, vertices[f.v3-1].y, vertices[f.v3-1].z}
-        });
+        triangles.push_back({{vertices[f.v1-1].x, vertices[f.v1-1].y, vertices[f.v1-1].z},
+                             {vertices[f.v2-1].x, vertices[f.v2-1].y, vertices[f.v2-1].z},
+                             {vertices[f.v3-1].x, vertices[f.v3-1].y, vertices[f.v3-1].z}});
     }
 
     auto start = high_resolution_clock::now();
     Octree tree(minX, minY, minZ, maxX, maxY, maxZ);
     tree.build(triangles, maxDepth);
-
     auto stop = high_resolution_clock::now();
     
     vector<AABB> voxels;
     tree.collectVoxels(voxels);
-
-    cout << "[Output di path  ] : " << outputPath << endl<< endl;
     writeVoxelOBJ(outputPath, voxels);
 
+    cout << "[Output di path  ] : " << outputPath << endl << endl;
     cout << "\n[ STATISTIK ] " << endl;
     cout << "Voxel terbentuk    : " << voxels.size() << endl;
     cout << "Vertex awal        : " << vertices.size() << endl;
@@ -143,12 +139,75 @@ int main(int argc, char* argv[]) {
     cout << "Kedalaman Octree   : " << maxDepth << endl;
     cout << "Lama waktu         : " << duration_cast<milliseconds>(stop - start).count() << " ms" << endl;
     cout << "Path file .obj     : " << outputPath << endl;
-
     tree.printStatistics();
-    int result = system(command.c_str());
+
+    // --- 4. VISUALISASI X11 (ROBLOX NAVIGATION) ---
+    Display* display = XOpenDisplay(NULL);
+    if (!display) return 1;
     
-    if (result != 0) {
-        cerr << "Gagal menjalankan Blender." << endl;
+    int width = 1024, height = 768;
+    Window window = XCreateSimpleWindow(display, RootWindow(display, DefaultScreen(display)), 0, 0, width, height, 1, 0, 0);
+    XSelectInput(display, window, ExposureMask | KeyPressMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
+    XMapWindow(display, window);
+
+    std::vector<uint32_t> frameBuffer(width * height);
+    SoftwareRenderer renderer(width, height);
+    renderer.rotationY = 0.8f;   
+    renderer.rotationX = 0.5f;  
+    
+    renderer.cameraPos.x = (float)((minX + maxX) / 2);
+    renderer.cameraPos.y = (float)((minY + maxY) / 2);
+    renderer.cameraPos.z = -(maxSize * 5.0f);
+
+    XImage* ximage = XCreateImage(display, DefaultVisual(display, DefaultScreen(display)), DefaultDepth(display, DefaultScreen(display)), 
+                                  ZPixmap, 0, (char*)frameBuffer.data(), width, height, 32, 0);
+    GC gc = XCreateGC(display, window, 0, NULL);
+
+    bool running = true;
+    bool isRightDragging = false;
+    int lastX = 0, lastY = 0;
+
+    cout << "\n[ Visualisasi ] : Klik Kanan + Drag untuk rotasi, Scroll untuk Zoom." << endl;
+
+    while (running) {
+        renderer.render(voxels, frameBuffer);
+        XPutImage(display, window, gc, ximage, 0, 0, 0, 0, width, height);
+        
+        while (XPending(display)) {
+            XEvent event;
+            XNextEvent(display, &event);
+
+            if (event.type == KeyPress && XLookupKeysym(&event.xkey, 0) == XK_Escape) running = false;
+
+            if (event.type == ButtonPress) {
+                if (event.xbutton.button == 3) {
+                    isRightDragging = true;
+                    lastX = event.xbutton.x;
+                    lastY = event.xbutton.y;
+                }
+                if (event.xbutton.button == 4) renderer.cameraPos.z += maxSize * 0.2f; 
+                if (event.xbutton.button == 5) renderer.cameraPos.z -= maxSize * 0.2f; 
+            }
+
+            if (event.type == ButtonRelease && event.xbutton.button == 3) {
+                isRightDragging = false;
+            }
+
+            if (event.type == MotionNotify && isRightDragging) {
+                int dx = event.xmotion.x - lastX;
+                int dy = event.xmotion.y - lastY;
+                
+                renderer.rotationY += dx * 0.005f;
+                renderer.rotationX += dy * 0.005f;
+                if (renderer.rotationX > 1.5f) renderer.rotationX = 1.5f;
+                if (renderer.rotationX < -1.5f) renderer.rotationX = -1.5f;
+
+                lastX = event.xmotion.x;
+                lastY = event.xmotion.y;
+            }
+        }
     }
+
+    XCloseDisplay(display);
     return 0;
 }
